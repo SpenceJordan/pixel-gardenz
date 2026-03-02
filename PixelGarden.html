@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Pixel Garden</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+  :root {
+    --sky: #5c94fc;
+    --sky2: #9bb8ff;
+    --grass: #52c41a;
+    --grass-dark: #389e0d;
+    --soil: #7c4f1e;
+    --soil2: #a0632a;
+    --pixel-border: #1a1a2e;
+    --cream: #fff9e6;
+    --gold: #ffd700;
+    --orange: #ff8c00;
+    --pink: #ff69b4;
+    --purple: #9b59b6;
+    --teal: #1abc9c;
+    --red: #e74c3c;
+    --ui-bg: #0d0d1a;
+    --ui-panel: #1a1a2e;
+    --ui-border: #4a4a8a;
+    --ui-accent: #52c41a;
+    --text: #e8e8ff;
+    --text-gold: #ffd700;
+    --shadow-pixel: 4px 4px 0 #000;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Press Start 2P', monospace;
+    background: var(--ui-bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    image-rendering: pixelated;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    background: var(--ui-panel);
+    border-bottom: 4px solid var(--ui-border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  #header h1 {
+    font-size: 11px;
+    color: var(--ui-accent);
+    text-shadow: 2px 2px 0 #000;
+    white-space: nowrap;
+    letter-spacing: 1px;
+  }
+
+  .stat-chip {
+    background: #0d0d1a;
+    border: 3px solid var(--ui-border);
+    padding: 4px 10px;
+    font-size: 9px;
+    color: var(--text-gold);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    image-rendering: pixelated;
+  }
+
+  .stat-chip span { color: #fff; }
+
+  #exp-bar-wrap {
+    background: #000;
+    border: 3px solid var(--ui-border);
+    height: 18px;
+    width: 120px;
+    position: relative;
+    overflow: hidden;
+  }
+  #exp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #52c41a, #a8e063);
+    transition: width 0.4s;
+  }
+  #exp-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 7px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+  }
+
+  /* nav tabs */
+  .tab-group { display: flex; gap: 4px; margin-left: auto; }
+  .tab-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    background: #0d0d1a;
+    border: 3px solid var(--ui-border);
+    color: var(--text);
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .tab-btn:hover { background: #2a2a4a; border-color: #8888cc; }
+  .tab-btn.active { background: var(--ui-accent); color: #000; border-color: #000; }
+
+  /* ── MAIN LAYOUT ── */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── GAME WORLD ── */
+  #world-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas#world {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    cursor: crosshair;
+  }
+
+  /* ── SIDE PANEL ── */
+  #side-panel {
+    width: 220px;
+    background: var(--ui-panel);
+    border-left: 4px solid var(--ui-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-title {
+    font-size: 9px;
+    color: var(--text-gold);
+    padding: 10px 12px;
+    border-bottom: 3px solid var(--ui-border);
+    background: #0d0d1a;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* Toolbar */
+  #toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border-bottom: 3px solid var(--ui-border);
+  }
+
+  .tool-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    background: #0d0d1a;
+    border: 3px solid var(--ui-border);
+    color: var(--text);
+    padding: 7px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tool-btn:hover { background: #2a2a4a; border-color: #8888cc; }
+  .tool-btn.active { background: var(--orange); color: #000; border-color: #000; }
+
+  /* Item grid */
+  #item-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    align-content: start;
+  }
+
+  .item-card {
+    background: #0d0d1a;
+    border: 3px solid var(--ui-border);
+    padding: 6px;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 7px;
+    color: #aaa;
+    text-align: center;
+  }
+  .item-card:hover { border-color: var(--ui-accent); background: #1a2a1a; }
+  .item-card.selected { border-color: var(--text-gold); background: #2a2a0a; color: var(--text-gold); }
+  .item-card.locked { opacity: 0.4; cursor: not-allowed; }
+  .item-card .icon { font-size: 20px; line-height: 1; }
+  .item-card .price { color: var(--text-gold); margin-top: 2px; }
+  .item-card .name { font-size: 6px; }
+
+  /* Shop overlay */
+  #shop-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #shop-overlay.open { display: flex; }
+
+  #shop-box {
+    background: var(--ui-panel);
+    border: 4px solid var(--ui-border);
+    width: 480px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #shop-header {
+    background: #0d0d1a;
+    padding: 12px 16px;
+    border-bottom: 4px solid var(--ui-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #shop-header h2 { font-size: 11px; color: var(--text-gold); }
+
+  .close-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    background: var(--red);
+    border: 3px solid #000;
+    color: #fff;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+
+  .shop-tabs { display: flex; border-bottom: 4px solid var(--ui-border); }
+  .shop-tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    flex: 1;
+    padding: 8px;
+    background: #0d0d1a;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    border-right: 3px solid var(--ui-border);
+  }
+  .shop-tab:last-child { border-right: none; }
+  .shop-tab.active { background: var(--ui-panel); color: var(--text-gold); }
+
+  #shop-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .shop-card {
+    background: #0d0d1a;
+    border: 3px solid var(--ui-border);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .shop-card .icon { font-size: 28px; }
+  .shop-card .name { font-size: 7px; text-align: center; color: var(--text); }
+  .shop-card .price { font-size: 8px; color: var(--text-gold); }
+  .buy-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: var(--ui-accent);
+    border: 3px solid #000;
+    color: #000;
+    padding: 5px 10px;
+    cursor: pointer;
+    width: 100%;
+  }
+  .buy-btn:hover { background: #73d13d; }
+  .buy-btn:disabled { background: #333; color: #666; cursor: not-allowed; border-color: #444; }
+
+  /* floating feedback */
+  .float-text {
+    position: fixed;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    pointer-events: none;
+    z-index: 9999;
+    text-shadow: 2px 2px 0 #000;
+    animation: floatUp 1s ease forwards;
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-60px); }
+  }
+
+  /* level up modal */
+  #levelup-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+  }
+  #levelup-modal.open { display: flex; }
+  #levelup-modal .lv-box {
+    background: var(--ui-panel);
+    border: 6px solid var(--text-gold);
+    padding: 30px 40px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    animation: pixelPop 0.3s steps(4) forwards;
+  }
+  @keyframes pixelPop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+  #levelup-modal .lv-title { font-size: 18px; color: var(--text-gold); text-shadow: 3px 3px 0 #000; }
+  #levelup-modal .lv-num { font-size: 36px; color: #fff; }
+  #levelup-modal .lv-ok {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    background: var(--text-gold);
+    border: 4px solid #000;
+    color: #000;
+    padding: 10px 24px;
+    cursor: pointer;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #0d0d1a; }
+  ::-webkit-scrollbar-thumb { background: var(--ui-border); }
+
+  /* ── FREE-ROAM OVERLAY ── */
+  #animal-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9000;
+  }
+
+  .roam-animal {
+    position: absolute;
+    font-size: 28px;
+    pointer-events: all;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.05s;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
+    line-height: 1;
+  }
+  .roam-animal:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: #000;
+    color: #ffd700;
+    padding: 3px 6px;
+    border: 2px solid #4a4a8a;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Recall button */
+  #recall-btn {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 9100;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    background: #1a1a2e;
+    border: 3px solid #4a4a8a;
+    color: #ffd700;
+    padding: 10px 14px;
+    cursor: pointer;
+    display: none;
+    gap: 6px;
+    align-items: center;
+    box-shadow: 4px 4px 0 #000;
+    transition: background 0.1s;
+  }
+  #recall-btn:hover { background: #2a2a4a; border-color: #ffd700; }
+  #recall-btn.visible { display: flex; }
+
+  /* pixel star animation on placed item */
+  @keyframes sparkle {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    100% { transform: scale(2) rotate(180deg); opacity: 0; }
+  }
+
+  /* shelter panel page */
+  #shelter-page {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  #shelter-page.active { display: block; }
+  #world-wrap.hidden { display: none; }
+
+  .animal-row {
+    background: #0d0d1a;
+    border: 3px solid var(--ui-border);
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .animal-row .a-icon { font-size: 28px; }
+  .animal-row .a-info { flex: 1; }
+  .animal-row .a-name { font-size: 9px; color: var(--text-gold); margin-bottom: 6px; }
+  .bar-wrap { background: #000; height: 8px; border: 2px solid #444; margin-bottom: 4px; }
+  .bar-fill { height: 100%; transition: width 0.3s; }
+  .bar-label { font-size: 6px; color: #aaa; margin-bottom: 2px; }
+  .a-btns { display: flex; gap: 6px; flex-direction: column; }
+  .a-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    background: #1a1a2e;
+    border: 2px solid var(--ui-border);
+    color: var(--text);
+    padding: 5px 8px;
+    cursor: pointer;
+  }
+  .a-btn:hover { background: #2a2a4a; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>🌱 PIXEL GARDEN</h1>
+  <div class="stat-chip">💰 <span id="coins-display">100</span></div>
+  <div class="stat-chip">⭐ LV <span id="level-display">1</span></div>
+  <div id="exp-bar-wrap">
+    <div id="exp-bar" style="width:0%"></div>
+    <div id="exp-label">0 / 100 EXP</div>
+  </div>
+  <div class="tab-group">
+    <button class="tab-btn active" onclick="switchPage('garden')">🌻 GARDEN</button>
+    <button class="tab-btn" onclick="switchPage('shelter')">🐾 SHELTER</button>
+    <button class="tab-btn" onclick="openShop()">🛒 SHOP</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- WORLD CANVAS -->
+  <div id="world-wrap">
+    <canvas id="world"></canvas>
+  </div>
+
+  <!-- SHELTER PAGE -->
+  <div id="shelter-page">
+    <div class="panel-title" style="font-size:12px;padding:0 0 12px 0;color:var(--text-gold)">🐾 YOUR ANIMALS</div>
+    <div id="shelter-list"></div>
+  </div>
+
+  <!-- SIDE PANEL (garden mode only) -->
+  <div id="side-panel">
+    <div class="panel-title">🔧 TOOLS</div>
+    <div id="toolbar">
+      <button class="tool-btn active" id="tool-select" onclick="setTool('select')">👆 SELECT / MOVE</button>
+      <button class="tool-btn" id="tool-place" onclick="setTool('place')">✏️ PLACE ITEM</button>
+      <button class="tool-btn" id="tool-water" onclick="setTool('water')">💧 WATER</button>
+      <button class="tool-btn" id="tool-harvest" onclick="setTool('harvest')">🌾 HARVEST</button>
+      <button class="tool-btn" id="tool-erase" onclick="setTool('erase')">🗑️ ERASE</button>
+    </div>
+    <div class="panel-title">📦 INVENTORY</div>
+    <div id="item-grid"></div>
+  </div>
+
+</div>
+
+<!-- SHOP OVERLAY -->
+<div id="shop-overlay">
+  <div id="shop-box">
+    <div id="shop-header">
+      <h2>🛒 SHOP</h2>
+      <button class="close-btn" onclick="closeShop()">✕</button>
+    </div>
+    <div class="shop-tabs">
+      <button class="shop-tab active" onclick="switchShopTab('plants',this)">🌱 PLANTS</button>
+      <button class="shop-tab" onclick="switchShopTab('deco',this)">🪨 DECO</button>
+      <button class="shop-tab" onclick="switchShopTab('animals',this)">🐾 ANIMALS</button>
+    </div>
+    <div id="shop-items"></div>
+  </div>
+</div>
+
+<!-- FREE-ROAM ANIMAL OVERLAY -->
+<div id="animal-overlay"></div>
+
+<!-- RECALL BUTTON -->
+<button id="recall-btn" onclick="recallAnimals()">🏡 RECALL ANIMALS</button>
+
+<!-- LEVEL UP MODAL -->
+<div id="levelup-modal">
+  <div class="lv-box">
+    <div class="lv-title">✨ LEVEL UP! ✨</div>
+    <div class="lv-num" id="lv-num">2</div>
+    <div style="font-size:8px;color:#aaa">NEW ITEMS UNLOCKED!</div>
+    <button class="lv-ok" onclick="closeLevelUp()">AWESOME!</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════
+const TILE = 32; // world tile size (pixels on canvas)
+let COLS, ROWS; // set from canvas size
+
+const state = {
+  coins: 100,
+  level: 1,
+  exp: 0,
+  tool: 'select',
+  selectedItemKey: null,
+  inventory: {}, // key -> count
+  worldItems: [], // {id, type, key, x, y, stage, water, harvestable, placed}
+  animals: [],    // {id, name, icon, x, y, vx, vy, hunger, happiness, target}
+  nextId: 1,
+  shopTab: 'plants',
+  dragging: null, // {item, startX, startY}
+  page: 'garden',
+};
+
+// ══════════════════════════════════════════════
+//  ITEM DEFINITIONS
+// ══════════════════════════════════════════════
+const ITEMS = {
+  // Plants
+  sunflower:  { name:'Sunflower',  icon:'🌻', type:'plant', price:15, growTime:15000, harvestCoins:30, exp:20, unlock:1 },
+  rose:       { name:'Rose',       icon:'🌹', type:'plant', price:20, growTime:20000, harvestCoins:40, exp:25, unlock:1 },
+  tulip:      { name:'Tulip',      icon:'🌷', type:'plant', price:12, growTime:12000, harvestCoins:25, exp:15, unlock:1 },
+  mushroom:   { name:'Mushroom',   icon:'🍄', type:'plant', price:25, growTime:25000, harvestCoins:55, exp:35, unlock:2 },
+  cactus:     { name:'Cactus',     icon:'🌵', type:'plant', price:18, growTime:30000, harvestCoins:45, exp:30, unlock:2 },
+  fourleaf:   { name:'4-Leaf',     icon:'🍀', type:'plant', price:50, growTime:60000, harvestCoins:150, exp:80, unlock:3 },
+  // Deco
+  rock:       { name:'Rock',       icon:'🪨', type:'deco', price:8,  unlock:1 },
+  fence:      { name:'Fence',      icon:'🪵', type:'deco', price:10, unlock:1 },
+  pond:       { name:'Pond',       icon:'🫧', type:'deco', price:30, unlock:2 },
+  lantern:    { name:'Lantern',    icon:'🏮', type:'deco', price:35, unlock:2 },
+  well:       { name:'Well',       icon:'🪣', type:'deco', price:60, unlock:3 },
+  scarecrow:  { name:'Scarecrow',  icon:'🧱', type:'deco', price:25, unlock:1 },
+};
+
+const ANIMALS = {
+  bunny:  { name:'Bunny',   icon:'🐰', price:50,  speed:0.6, hunger:30, happiness:80, unlock:1 },
+  chick:  { name:'Chick',   icon:'🐥', price:40,  speed:0.8, hunger:40, happiness:70, unlock:1 },
+  cat:    { name:'Cat',     icon:'🐱', price:80,  speed:0.4, hunger:25, happiness:75, unlock:2 },
+  dog:    { name:'Dog',     icon:'🐶', price:90,  speed:0.7, hunger:35, happiness:85, unlock:2 },
+  fox:    { name:'Fox',     icon:'🦊', price:120, speed:0.9, hunger:30, happiness:65, unlock:3 },
+  frog:   { name:'Frog',    icon:'🐸', price:60,  speed:0.5, hunger:20, happiness:90, unlock:2 },
+};
+
+// ══════════════════════════════════════════════
+//  CANVAS SETUP
+// ══════════════════════════════════════════════
+const canvas = document.getElementById('world');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const wrap = document.getElementById('world-wrap');
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  COLS = Math.floor(canvas.width / TILE);
+  ROWS = Math.floor(canvas.height / TILE);
+}
+
+// ══════════════════════════════════════════════
+//  DRAW WORLD
+// ══════════════════════════════════════════════
+function drawWorld() {
+  const W = canvas.width, H = canvas.height;
+  const horizonY = Math.floor(ROWS * 0.28) * TILE;
+
+  // Sky gradient (pixel bands)
+  const skyColors = ['#5c94fc','#6aa0fc','#78acfd','#86b8fd','#94c4fe'];
+  const bandH = Math.ceil(horizonY / skyColors.length);
+  skyColors.forEach((c, i) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(0, i * bandH, W, bandH + 2);
+  });
+
+  // Clouds (static decorative)
+  drawCloud(ctx, 80,  20, 0.9);
+  drawCloud(ctx, 300, 15, 1.1);
+  drawCloud(ctx, 560, 25, 0.8);
+
+  // Sun
+  ctx.fillStyle = '#fff9a0';
+  pixelCircle(ctx, W - 60, 30, 18);
+  ctx.fillStyle = '#ffd700';
+  pixelCircle(ctx, W - 60, 30, 14);
+
+  // Grass strip (3 rows)
+  for (let row = Math.floor(horizonY/TILE); row < Math.floor(horizonY/TILE) + 3; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const shade = (col + row) % 2 === 0 ? '#52c41a' : '#5dcf1e';
+      ctx.fillStyle = shade;
+      ctx.fillRect(col * TILE, row * TILE, TILE, TILE);
+    }
+  }
+
+  // Soil (rest)
+  const soilY = horizonY + TILE * 3;
+  for (let row = Math.floor(soilY / TILE); row <= ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const shade = (col + row) % 2 === 0 ? '#7c4f1e' : '#8a5a22';
+      ctx.fillStyle = shade;
+      ctx.fillRect(col * TILE, row * TILE, TILE, TILE);
+    }
+  }
+
+  // Grid overlay on soil area
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+  ctx.lineWidth = 1;
+  for (let col = 0; col <= COLS; col++) {
+    ctx.beginPath();
+    ctx.moveTo(col * TILE, soilY);
+    ctx.lineTo(col * TILE, H);
+    ctx.stroke();
+  }
+  for (let row = Math.floor(soilY / TILE); row <= ROWS; row++) {
+    ctx.beginPath();
+    ctx.moveTo(0, row * TILE);
+    ctx.lineTo(W, row * TILE);
+    ctx.stroke();
+  }
+
+  // World items
+  state.worldItems.forEach(item => drawItem(item));
+
+  // Tool cursor highlight
+  if (state.tool === 'place' || state.tool === 'water' || state.tool === 'harvest' || state.tool === 'erase') {
+    if (cursorTile.x >= 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.fillRect(cursorTile.x * TILE, cursorTile.y * TILE, TILE, TILE);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cursorTile.x * TILE + 1, cursorTile.y * TILE + 1, TILE - 2, TILE - 2);
+    }
+  }
+}
+
+function drawCloud(ctx, x, y, scale) {
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  const s = scale;
+  [[0,0,14,10],[12,0,18,12],[28,2,14,10],[-4,4,12,8],[30,5,12,8]].forEach(([ox,oy,w,h]) => {
+    ctx.fillRect(Math.round(x+ox*s), Math.round(y+oy*s), Math.round(w*s), Math.round(h*s));
+  });
+}
+
+function pixelCircle(ctx, cx, cy, r) {
+  for (let y = -r; y <= r; y++) {
+    for (let x = -r; x <= r; x++) {
+      if (x*x + y*y <= r*r) {
+        ctx.fillRect(Math.round(cx + x), Math.round(cy + y), 1, 1);
+      }
+    }
+  }
+}
+
+function drawItem(item) {
+  const def = ITEMS[item.key];
+  const cx = item.x * TILE + TILE / 2;
+  const cy = item.y * TILE + TILE / 2;
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(cx - 10, item.y * TILE + TILE - 5, 20, 5);
+
+  // Emoji
+  ctx.font = `${TILE - 4}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (def.type === 'plant') {
+    const now = Date.now();
+    const elapsed = now - item.placedAt;
+    const progress = Math.min(elapsed / def.growTime, 1);
+    item.stage = progress;
+
+    let icon;
+    if (item.water < 30) {
+      icon = '🌱';
+    } else if (progress < 0.4) {
+      icon = '🌿';
+    } else if (progress < 0.8) {
+      icon = def.icon;
+    } else {
+      icon = def.icon;
+      item.harvestable = true;
+      // Glow effect for harvestable
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 8;
+    }
+
+    // Water meter
+    if (item.water > 0) {
+      const barW = TILE - 8;
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(item.x * TILE + 4, item.y * TILE + TILE - 9, barW, 5);
+      ctx.fillStyle = '#4ec9f5';
+      ctx.fillRect(item.x * TILE + 4, item.y * TILE + TILE - 9, barW * (item.water / 100), 5);
+    }
+
+    ctx.font = `${Math.round(TILE * 0.72)}px serif`;
+    ctx.fillText(icon, cx, cy - 2);
+    ctx.shadowBlur = 0;
+
+    // Harvestable sparkle
+    if (item.harvestable) {
+      const t = (Date.now() / 300) % (Math.PI * 2);
+      ctx.fillStyle = `rgba(255,220,0,${0.5 + 0.5 * Math.sin(t)})`;
+      ctx.font = '10px serif';
+      ctx.fillText('✨', cx + 10, item.y * TILE + 4);
+    }
+  } else {
+    ctx.font = `${Math.round(TILE * 0.78)}px serif`;
+    ctx.fillText(def.icon, cx, cy);
+  }
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+// canvas draw stub (animals now on overlay)
+function drawAnimal(a) { /* handled by DOM overlay */ }
+
+// ══════════════════════════════════════════════
+//  FREE-ROAM ANIMAL OVERLAY
+// ══════════════════════════════════════════════
+const overlay = document.getElementById('animal-overlay');
+const recallBtn = document.getElementById('recall-btn');
+const animalEls = {}; // id -> DOM element
+
+function syncAnimalEls() {
+  // Create missing elements
+  state.animals.forEach(a => {
+    if (!animalEls[a.id]) {
+      const el = document.createElement('div');
+      el.className = 'roam-animal';
+      el.textContent = a.icon;
+      el.dataset.id = a.id;
+      el.dataset.tip = `${a.name} — click to pet!`;
+      el.addEventListener('click', () => {
+        a.happiness = Math.min(a.happiness + 10, 100);
+        gainExp(3);
+        // little heart burst
+        const heart = document.createElement('div');
+        heart.className = 'float-text';
+        heart.style.left = (a.x + 10) + 'px';
+        heart.style.top = (a.y - 10) + 'px';
+        heart.style.color = '#ff69b4';
+        heart.textContent = '♡';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 900);
+        saveGame();
+      });
+      // right-click to send back to garden
+      el.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        recallSingleAnimal(a.id);
+      });
+      overlay.appendChild(el);
+      animalEls[a.id] = el;
+    }
+  });
+  // Remove stale elements
+  Object.keys(animalEls).forEach(id => {
+    if (!state.animals.find(a => a.id == id)) {
+      animalEls[id].remove();
+      delete animalEls[id];
+    }
+  });
+}
+
+function updateAnimalEls() {
+  state.animals.forEach(a => {
+    const el = animalEls[a.id];
+    if (!el) return;
+    el.style.left = Math.round(a.x) + 'px';
+    el.style.top  = Math.round(a.y) + 'px';
+    // Flip horizontally when moving left
+    el.style.transform = a.vx < 0 ? 'scaleX(-1)' : 'scaleX(1)';
+    // Mood badge
+    if (a.happiness > 70) {
+      el.dataset.tip = `${a.name} ♡ Happy!`;
+    } else if (a.hunger > 70) {
+      el.dataset.tip = `${a.name} 😢 Hungry!`;
+    } else {
+      el.dataset.tip = `${a.name} — click to pet!`;
+    }
+  });
+  // Show recall button if any animals exist
+  recallBtn.classList.toggle('visible', state.animals.length > 0);
+}
+
+function recallAnimals() {
+  // Send all animals back to garden area positions
+  const W = window.innerWidth, H = window.innerHeight;
+  state.animals.forEach(a => {
+    a.x = 100 + Math.random() * (W * 0.5);
+    a.y = H * 0.5 + Math.random() * (H * 0.3);
+    a.target = null;
+    a.pauseUntil = Date.now() + 500;
+  });
+}
+
+function recallSingleAnimal(id) {
+  const a = state.animals.find(x => x.id == id);
+  if (!a) return;
+  const W = window.innerWidth, H = window.innerHeight;
+  a.x = 100 + Math.random() * (W * 0.5);
+  a.y = H * 0.5 + Math.random() * (H * 0.3);
+  a.target = null;
+  a.pauseUntil = Date.now() + 500;
+  floatText('🏡 Recalled!', a.x, a.y, '#52c41a');
+}
+
+// ══════════════════════════════════════════════
+//  ANIMAL AI  (full browser bounds)
+// ══════════════════════════════════════════════
+function updateAnimals() {
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const PAD = 40;
+
+  state.animals.forEach(a => {
+    // Init position if missing
+    if (!a.x || a.x <= 0) a.x = PAD + Math.random() * (W - PAD * 2);
+    if (!a.y || a.y <= 0) a.y = PAD + Math.random() * (H - PAD * 2);
+
+    // Pick new target when close or missing
+    if (!a.target ||
+        (Math.abs(a.x - a.target.x) < 3 && Math.abs(a.y - a.target.y) < 3)) {
+      a.target = {
+        x: PAD + Math.random() * (W - PAD * 2),
+        y: PAD + Math.random() * (H - PAD * 2),
+      };
+      a.pauseUntil = Date.now() + 600 + Math.random() * 2500;
+    }
+
+    if (Date.now() < (a.pauseUntil || 0)) {
+      a.vx = 0; a.vy = 0;
+      return;
+    }
+
+    const dx = a.target.x - a.x;
+    const dy = a.target.y - a.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 3) {
+      a.vx = (dx / dist) * a.speed;
+      a.vy = (dy / dist) * a.speed;
+      a.x += a.vx;
+      a.y += a.vy;
+    } else {
+      a.vx = 0; a.vy = 0;
+    }
+
+    // Keep in bounds
+    a.x = Math.max(PAD, Math.min(W - PAD, a.x));
+    a.y = Math.max(PAD, Math.min(H - PAD, a.y));
+
+    // Stat decay
+    a.hunger    = Math.min(a.hunger    + 0.002, 100);
+    a.happiness = Math.max(a.happiness - 0.001,   0);
+    if (a.happiness > 60 && Math.random() < 0.0005) {
+      state.coins += 1;
+      updateHUD();
+    }
+  });
+
+  syncAnimalEls();
+  updateAnimalEls();
+}
+
+// ══════════════════════════════════════════════
+//  INTERACTION
+// ══════════════════════════════════════════════
+let cursorTile = { x: -1, y: -1 };
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  cursorTile.x = Math.floor(mx / TILE);
+  cursorTile.y = Math.floor(my / TILE);
+
+  // Dragging
+  if (state.dragging) {
+    state.dragging.item.x = cursorTile.x;
+    state.dragging.item.y = cursorTile.y;
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  cursorTile.x = -1;
+});
+
+canvas.addEventListener('mousedown', e => {
+  if (state.page !== 'garden') return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const tx = Math.floor(mx / TILE);
+  const ty = Math.floor(my / TILE);
+
+  if (state.tool === 'select') {
+    // Check if clicking on item to drag
+    const item = getItemAt(tx, ty);
+    if (item) {
+      state.dragging = { item };
+      canvas.style.cursor = 'grabbing';
+    } else {
+      // Click on animal -> feed / play
+      const animal = getAnimalNear(mx, my);
+      if (animal) {
+        animal.happiness = Math.min(animal.happiness + 10, 100);
+        gainExp(3);
+        floatText('+❤️ +3 EXP', e.clientX, e.clientY, '#ff69b4');
+        saveGame();
+      }
+    }
+  } else if (state.tool === 'place') {
+    placeItem(tx, ty, e.clientX, e.clientY);
+  } else if (state.tool === 'water') {
+    waterItem(tx, ty, e.clientX, e.clientY);
+  } else if (state.tool === 'harvest') {
+    harvestItem(tx, ty, e.clientX, e.clientY);
+  } else if (state.tool === 'erase') {
+    eraseItem(tx, ty, e.clientX, e.clientY);
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  if (state.dragging) {
+    state.dragging = null;
+    canvas.style.cursor = 'crosshair';
+    saveGame();
+  }
+});
+
+function getItemAt(tx, ty) {
+  return state.worldItems.find(i => i.x === tx && i.y === ty);
+}
+
+function getAnimalNear(mx, my) {
+  return state.animals.find(a => Math.abs(a.x - mx) < 24 && Math.abs(a.y - my) < 24);
+}
+
+// ══════════════════════════════════════════════
+//  GARDEN ACTIONS
+// ══════════════════════════════════════════════
+function placeItem(tx, ty, cx, cy) {
+  if (!state.selectedItemKey) {
+    floatText('SELECT ITEM FIRST →', cx, cy, '#ff8c00');
+    return;
+  }
+  const key = state.selectedItemKey;
+  if (!state.inventory[key] || state.inventory[key] < 1) {
+    floatText('NOT ENOUGH!', cx, cy, '#e74c3c');
+    return;
+  }
+  if (getItemAt(tx, ty)) {
+    floatText('TILE OCCUPIED!', cx, cy, '#e74c3c');
+    return;
+  }
+  state.inventory[key]--;
+  if (state.inventory[key] <= 0) delete state.inventory[key];
+
+  state.worldItems.push({
+    id: state.nextId++,
+    type: ITEMS[key].type,
+    key,
+    x: tx,
+    y: ty,
+    stage: 0,
+    water: 50,
+    harvestable: false,
+    placedAt: Date.now(),
+  });
+
+  floatText('✓ PLACED!', cx, cy, '#52c41a');
+  gainExp(5);
+  renderInventory();
+  saveGame();
+}
+
+function waterItem(tx, ty, cx, cy) {
+  const item = getItemAt(tx, ty);
+  if (!item || item.type !== 'plant') { floatText('NO PLANT HERE', cx, cy, '#aaa'); return; }
+  item.water = Math.min(item.water + 30, 100);
+  floatText('💧 +WATER', cx, cy, '#4ec9f5');
+  gainExp(3);
+  saveGame();
+}
+
+function harvestItem(tx, ty, cx, cy) {
+  const item = getItemAt(tx, ty);
+  if (!item || item.type !== 'plant') { floatText('NO PLANT HERE', cx, cy, '#aaa'); return; }
+  if (!item.harvestable) { floatText('NOT READY!', cx, cy, '#ff8c00'); return; }
+
+  const def = ITEMS[item.key];
+  const coins = def.harvestCoins + state.level * 3;
+  state.coins += coins;
+  gainExp(def.exp);
+  floatText(`+${coins} 💰`, cx, cy, '#ffd700');
+
+  state.worldItems = state.worldItems.filter(i => i.id !== item.id);
+  updateHUD();
+  saveGame();
+}
+
+function eraseItem(tx, ty, cx, cy) {
+  const idx = state.worldItems.findIndex(i => i.x === tx && i.y === ty);
+  if (idx === -1) { floatText('NOTHING HERE', cx, cy, '#aaa'); return; }
+  state.worldItems.splice(idx, 1);
+  floatText('🗑️ REMOVED', cx, cy, '#e74c3c');
+  saveGame();
+}
+
+// ══════════════════════════════════════════════
+//  SHOP
+// ══════════════════════════════════════════════
+function openShop() { document.getElementById('shop-overlay').classList.add('open'); renderShop(); }
+function closeShop() { document.getElementById('shop-overlay').classList.remove('open'); }
+
+function switchShopTab(tab, btn) {
+  state.shopTab = tab;
+  document.querySelectorAll('.shop-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderShop();
+}
+
+function renderShop() {
+  const container = document.getElementById('shop-items');
+  container.innerHTML = '';
+  let items;
+  if (state.shopTab === 'plants') {
+    items = Object.entries(ITEMS).filter(([,v]) => v.type === 'plant');
+  } else if (state.shopTab === 'deco') {
+    items = Object.entries(ITEMS).filter(([,v]) => v.type === 'deco');
+  } else {
+    items = Object.entries(ANIMALS);
+  }
+
+  items.forEach(([key, def]) => {
+    const locked = def.unlock > state.level;
+    const canAfford = state.coins >= def.price;
+    const card = document.createElement('div');
+    card.className = 'shop-card';
+    card.innerHTML = `
+      <div class="icon">${def.icon}</div>
+      <div class="name">${def.name}${locked ? ' 🔒' : ''}</div>
+      ${locked ? `<div style="font-size:6px;color:#888">Unlock Lv.${def.unlock}</div>` : `<div class="price">💰 ${def.price}</div>`}
+      <button class="buy-btn" ${locked || !canAfford ? 'disabled' : ''} onclick="buyItem('${key}')">
+        ${locked ? 'LOCKED' : canAfford ? 'BUY' : 'BROKE'}
+      </button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function buyItem(key) {
+  const def = ITEMS[key] || ANIMALS[key];
+  if (state.coins < def.price) return;
+  state.coins -= def.price;
+
+  if (ANIMALS[key]) {
+    const adef = ANIMALS[key];
+    state.animals.push({
+      id: state.nextId++,
+      name: adef.name,
+      icon: adef.icon,
+      x: 80 + Math.random() * (canvas.width - 160),
+      y: canvas.height * 0.5 + Math.random() * (canvas.height * 0.4),
+      speed: adef.speed,
+      hunger: adef.hunger,
+      happiness: adef.happiness,
+      target: null,
+      pauseUntil: 0,
+    });
+    floatText(`🐾 ${adef.name} ADOPTED!`, 400, 300, '#ff69b4');
+    gainExp(20);
+    renderShelterList();
+  } else {
+    state.inventory[key] = (state.inventory[key] || 0) + 1;
+    floatText(`+1 ${def.icon} ${def.name}`, 400, 300, '#52c41a');
+    gainExp(5);
+    renderInventory();
+  }
+
+  updateHUD();
+  renderShop();
+  saveGame();
+}
+
+// ══════════════════════════════════════════════
+//  INVENTORY
+// ══════════════════════════════════════════════
+function renderInventory() {
+  const grid = document.getElementById('item-grid');
+  grid.innerHTML = '';
+
+  if (Object.keys(state.inventory).length === 0) {
+    grid.innerHTML = `<div style="font-size:7px;color:#666;grid-column:1/-1;padding:8px;text-align:center">EMPTY<br><br>BUY FROM SHOP!</div>`;
+    return;
+  }
+
+  Object.entries(state.inventory).forEach(([key, count]) => {
+    const def = ITEMS[key];
+    if (!def) return;
+    const card = document.createElement('div');
+    card.className = 'item-card' + (state.selectedItemKey === key ? ' selected' : '');
+    card.innerHTML = `<div class="icon">${def.icon}</div><div class="name">${def.name}</div><div style="font-size:8px;color:#fff">x${count}</div>`;
+    card.onclick = () => {
+      state.selectedItemKey = key;
+      setTool('place');
+      renderInventory();
+    };
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  SHELTER
+// ══════════════════════════════════════════════
+function renderShelterList() {
+  const list = document.getElementById('shelter-list');
+  if (state.animals.length === 0) {
+    list.innerHTML = `<div style="font-size:8px;color:#666;text-align:center;margin-top:40px">NO ANIMALS YET!<br><br>BUY FROM SHOP 🛒</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  state.animals.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'animal-row';
+    row.innerHTML = `
+      <div class="a-icon">${a.icon}</div>
+      <div class="a-info">
+        <div class="a-name">${a.name}</div>
+        <div class="bar-label">😊 Happiness</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${a.happiness}%;background:linear-gradient(90deg,#ff69b4,#ff8c00)"></div></div>
+        <div class="bar-label">🍖 Hunger</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${100-a.hunger}%;background:linear-gradient(90deg,#ffd700,#ff8c00)"></div></div>
+      </div>
+      <div class="a-btns">
+        <button class="a-btn" onclick="feedAnimal(${a.id})">🍖 FEED</button>
+        <button class="a-btn" onclick="playAnimal(${a.id})">🎾 PLAY</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function feedAnimal(id) {
+  const a = state.animals.find(x => x.id === id);
+  if (!a) return;
+  a.hunger = Math.max(a.hunger - 25, 0);
+  gainExp(5);
+  renderShelterList();
+  saveGame();
+}
+function playAnimal(id) {
+  const a = state.animals.find(x => x.id === id);
+  if (!a) return;
+  a.happiness = Math.min(a.happiness + 15, 100);
+  gainExp(8);
+  renderShelterList();
+  saveGame();
+}
+
+// ══════════════════════════════════════════════
+//  TOOLS & PAGES
+// ══════════════════════════════════════════════
+function setTool(t) {
+  state.tool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + t)?.classList.add('active');
+  if (t !== 'place') state.selectedItemKey = null;
+  renderInventory();
+}
+
+function switchPage(page) {
+  state.page = page;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(page === 'garden' ? 'garden' : 'shelter')) b.classList.add('active');
+  });
+  if (page === 'garden') {
+    document.getElementById('world-wrap').style.display = '';
+    document.getElementById('side-panel').style.display = '';
+    document.getElementById('shelter-page').classList.remove('active');
+  } else {
+    document.getElementById('world-wrap').style.display = 'none';
+    document.getElementById('side-panel').style.display = 'none';
+    document.getElementById('shelter-page').classList.add('active');
+    renderShelterList();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  EXP / LEVEL
+// ══════════════════════════════════════════════
+function gainExp(amt) {
+  state.exp += amt;
+  const needed = state.level * 100;
+  if (state.exp >= needed) {
+    state.exp -= needed;
+    state.level++;
+    document.getElementById('lv-num').textContent = state.level;
+    document.getElementById('levelup-modal').classList.add('open');
+  }
+  updateHUD();
+}
+function closeLevelUp() {
+  document.getElementById('levelup-modal').classList.remove('open');
+  renderShop();
+}
+
+function updateHUD() {
+  document.getElementById('coins-display').textContent = state.coins;
+  document.getElementById('level-display').textContent = state.level;
+  const needed = state.level * 100;
+  document.getElementById('exp-bar').style.width = (state.exp / needed * 100) + '%';
+  document.getElementById('exp-label').textContent = `${state.exp} / ${needed} EXP`;
+}
+
+// ══════════════════════════════════════════════
+//  FLOAT TEXT
+// ══════════════════════════════════════════════
+function floatText(msg, x, y, color) {
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.color = color;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ══════════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════════
+function saveGame() {
+  try {
+    const save = {
+      coins: state.coins, level: state.level, exp: state.exp,
+      inventory: state.inventory,
+      worldItems: state.worldItems.map(i => ({...i})),
+      animals: state.animals.map(a => ({...a, target: null})),
+      nextId: state.nextId,
+    };
+    localStorage.setItem('pixelgarden_v2', JSON.stringify(save));
+  } catch(e) {}
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem('pixelgarden_v2');
+    if (!raw) return;
+    const save = JSON.parse(raw);
+    state.coins = save.coins ?? 100;
+    state.level = save.level ?? 1;
+    state.exp = save.exp ?? 0;
+    state.inventory = save.inventory ?? {};
+    state.worldItems = (save.worldItems ?? []).map(i => ({...i}));
+    state.animals = (save.animals ?? []).map(a => ({
+      ...a,
+      x: a.x || 200,
+      y: a.y || 400,
+      target: null,
+      pauseUntil: 0,
+    }));
+    state.nextId = save.nextId ?? 1;
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════
+//  GAME LOOP
+// ══════════════════════════════════════════════
+let lastSave = 0;
+
+function loop() {
+  updateAnimals();
+  if (state.page === 'garden') {
+    drawWorld();
+  }
+  const now = Date.now();
+  if (now - lastSave > 15000) {
+    saveGame();
+    lastSave = now;
+  }
+  requestAnimationFrame(loop);
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function init() {
+  resizeCanvas();
+  loadGame();
+  updateHUD();
+  renderInventory();
+  renderShelterList();
+  renderShop();
+
+  // Start with some starter inventory if empty
+  if (Object.keys(state.inventory).length === 0 && state.worldItems.length === 0) {
+    state.inventory['sunflower'] = 3;
+    state.inventory['rock'] = 2;
+    state.inventory['tulip'] = 2;
+    renderInventory();
+  }
+
+  window.addEventListener('resize', () => { resizeCanvas(); });
+  loop();
+}
+
+init();
+</script>
+</body>
+</html>
